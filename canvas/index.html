@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="index.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
+ 
+		<!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+		<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+		 
+		<!-- popper.min.js 用于弹窗、提示、下拉菜单 -->
+		<script src="https://cdn.staticfile.org/popper.js/1.12.5/umd/popper.min.js"></script>
+		 
+		<!-- 最新的 Bootstrap4 核心 JavaScript 文件 -->
+		<script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/js/bootstrap.min.js"></script>
+	</head>
+	<body>
+		
+		<!--登录模态框开始-->
+		<div class="modal" id="login-modal" tabindex="-1" data-backdrop="static">
+
+
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button class="close" data-dismiss="modal">&times;</button><!-- 关闭 -->
+						<!-- <h3 class="text-success">登录界面</h3> -->
+					</div>
+					<div class="modal-body">
+						<form id="login-form" class="form-horizontal" action="#" method="post">
+							<div class="form-group">
+								<label class="col-lg-3">
+									<h5 class="text-success text-center">用户名</h5>
+								</label>
+								<div class="col-lg-9">
+									<input type="text" class="form-control" name="username" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-lg-3">
+									<h5 class="text-success text-center">房间号</h5>
+								</label>
+								<div class="col-lg-9">
+									<input type="text" class="form-control" name="number" />
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<input type="submit" class="btn btn-success" value="登录" form="login-form" />
+						<button class="btn btn-danger" data-dismiss="modal">关闭</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	
+				<div class="toolMenu">
+			            <div class="openButton">刷</div>
+			            <ul class="tool">
+			                <li>宽度:<input class="widthInput" type="range"/></li>
+			                <li>颜色:<input type="color"/></li>
+			                <li><button>橡皮擦</button></li>
+			            </ul>
+			            <ul class="tool eraser">
+			                <li>宽度:<input class="eraserInput" type="range"/></li>
+			            </ul>
+			            <div class="openButton clearButton">清</div>
+			            <a href="" class="download"><div class="download">存</div></a>
+			        </div>
+			        <canvas id="box"></canvas>
+			        <script >
+			        	/**
+			 * Created by Administrator on 2017/8/10.
+			 * js/painer.js
+			 */
+			(function () {
+			    function Painter(id) {
+			        var canvasEle = document.getElementById(id);
+			        canvasEle.width = innerWidth;
+			        canvasEle.height = innerHeight;
+
+			        this.context = canvasEle.getContext("2d");
+			        //画笔渐变色
+			        var linearGradient = this.context.createLinearGradient(0,0,innerWidth,innerHeight);
+			        linearGradient.addColorStop(0,"#1EEB9F");
+			        linearGradient.addColorStop(0.5,"#FFFFFF");
+			        linearGradient.addColorStop(1,"#26B9EB");
+			        this.context.strokeStyle = linearGradient;
+
+			        this.drawLine();
+			    }
+			    Painter.prototype.drawLine = function () {
+			        var self = this;
+			        //监听鼠标按下抬起
+			        this.context.canvas.addEventListener("mousedown",startAction);
+			        this.context.canvas.addEventListener("mouseup",endAction);
+			        //封装鼠标按下函数
+			        function startAction(event) {
+			            //如果没有使用橡皮擦就画线
+			            if(!self.isClear){
+			                //开始新的路径
+			                self.context.beginPath();
+			                self.context.moveTo(event.pageX,event.pageY);
+			                self.context.stroke();
+			            }
+			            //监听鼠标移动
+			            self.context.canvas.addEventListener("mousemove",moveAction);
+			        }
+			        //封装鼠标抬起函数
+			        function endAction() {
+			            //不再使用橡皮擦
+			            self.isClear=false;
+			            //移除鼠标移动事件
+			            self.context.canvas.removeEventListener("mousemove",moveAction);
+			        }
+			        //封装鼠标移动函数
+			        function moveAction(event) {
+			            //判断是否启动橡皮擦功能
+			            if(self.isClear){
+			                self.context.clearRect(event.pageX-8,event.pageY-8,16,16);
+			                return;
+			            }
+			            self.context.lineTo(event.pageX,event.pageY);
+			            self.context.stroke();
+			        }
+			    };
+			    //封装画笔宽度
+			    Painter.prototype.setLineWidth = function (width) {
+			       this.context.lineWidth = width;
+			    };
+			    //封装设置画笔样式
+			    Painter.prototype.isRoundLineCap = function (isRound) {
+			        this.context.lineCap = isRound?"round":"butt";
+			    };
+			    //封装画笔颜色
+			    Painter.prototype.setLineColor = function (color) {
+			        this.context.strokeStyle = color;
+			    };
+			    //封装画布内容转换
+			    Painter.prototype.save=function(){
+			        return this.context.canvas.toDataURL();
+			    };
+			    //封装橡皮擦
+			    Painter.prototype.eraser=function(){
+			        this.isClear=true;
+			    }
+			    //封装清屏
+			    Painter.prototype.clearCls=function(){
+			         this.context.clearRect(0,0,innerWidth,innerHeight)
+			    };
+			    //Painter定义到window上
+			    window.Painter = Painter;
+			})();
+        </script>
+        <script>
+        	/**
+ * Created by Administrator on 2017/8/10.
+ * js/main.js
+ */
+(function () {
+    function init() {
+        var panter = new Painter("box");
+        panter.setLineWidth(5);
+        panter.isRoundLineCap(true);
+        //panter.setLineColor("#242424");
+        var toolView = document.querySelector(".tool");
+        document.querySelector(".openButton").onclick = function () {
+            toolView.style.display = toolView.style.display === "block"?"none":"block";
+        };
+        document.querySelector("input[type=range]").value = panter.context.lineWidth*2;
+        //input的range绑定到画笔宽度
+        document.querySelector("input[type=range]").onchange = function () {
+            panter.setLineWidth(this.value/2);
+        };
+        //获取color颜色绑定到画笔
+        document.querySelector("input[type=color]").onchange = function () {
+            panter.setLineColor(this.value);
+        };
+        //清屏
+        document.querySelector('.clearButton').onclick = function() {
+            panter.clearCls();
+        }
+        //橡皮擦
+        document.querySelector('.tool button').onclick=function(){
+            panter.eraser();
+        }
+        //下载画布内容
+        document.querySelector(".download").onclick=function(){   
+            var a=panter.save();
+            console.log(1);
+            this.href=a;
+        }
+    }
+    init();
+})();
+        </script>
+	<script>
+		$(function(){
+			$("#login-modal").modal({
+				backdrop:"static",
+				show:true,
+				keyboard:false
+			});
+		})
+	</script>
+</html>
