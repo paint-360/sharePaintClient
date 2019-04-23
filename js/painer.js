@@ -14,6 +14,7 @@ const eraserWidth=16;
             this.optionStack=[];//操作记录栈
             this.resultposition=[];
             this.ws=this.initWebSocket();  
+            this.message;
             //画笔渐变色
             var linearGradient = this.context.createLinearGradient(0,0,innerWidth,innerHeight);
             linearGradient.addColorStop(0,"#1EEB9F");
@@ -25,14 +26,16 @@ const eraserWidth=16;
         }
         initWebSocket(){
             let ws=io.connect("ws://127.0.0.1:3030");
-            let ws = new WebSocket("ws://localhost:3000");
+            //let ws = new WebSocket("ws://localhost:3000");
             let self=this;
             // ws.onopen = function(evt) { 
             //     console.log("Connection open ...");
             // };
 
-            ws.on('message', function(evt) {
-                console.log( "Received Message: " + evt.data);
+            ws.on('message', function(data) {
+                // console.log( "Received Message: " + evt.data);
+                self.optionStack.push(data);
+                this.message=data;
                 self.update();
             })
 
@@ -73,7 +76,7 @@ const eraserWidth=16;
                 self.optionStack.push(message);
                 self.resultposition=[];
                 this.ws.send(message);
-                console.log(JSON.stringify(self.optionStack));
+                //console.log(JSON.stringify(self.optionStack));
             }
             //封装鼠标移动函数
             function moveAction(event) {
@@ -94,23 +97,21 @@ const eraserWidth=16;
         }
         //更新画布内容
         update(){
-            this.optionStack.forEach(op=>{
-                let option=op.option;
-                switch(op){
-                    case 0:
-                        op.positions.forEach(position=>{
-                            this.context.clearRect(position.x-eraserWidth/2,position.y-eraserWidth/2,eraserWidth,eraserWidth);
-                            this.context.stroke();
-                        })
-                        break;
-                    case 1:
-                        op.positions.forEach(position=>{
-                            this.context.lineTo(position.x,position.y);
-                            this.context.stroke();
-                        })
-                        break;
-                }
-            })
+            let op=this.message;
+            switch(op){
+                case 0:
+                    op.positions.forEach(position=>{
+                        this.context.clearRect(position.x-eraserWidth/2,position.y-eraserWidth/2,eraserWidth,eraserWidth);
+                        this.context.stroke();
+                    })
+                    break;
+                case 1:
+                    op.positions.forEach(position=>{
+                        this.context.lineTo(position.x,position.y);
+                        this.context.stroke();
+                    })
+                    break;
+            }
         }
         //封装画笔宽度
         setLineWidth(width) {
