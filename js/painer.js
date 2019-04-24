@@ -25,7 +25,7 @@ const eraserWidth=16;
             this.drawLine();
         }
         initWebSocket(){
-            let ws=io.connect("ws://127.0.0.1:3030");
+            let ws=io.connect("ws://127.0.0.1:3000");
             //let ws = new WebSocket("ws://localhost:3000");
             let self=this;
             // ws.onopen = function(evt) { 
@@ -35,7 +35,7 @@ const eraserWidth=16;
             ws.on('message', function(data) {
                 // console.log( "Received Message: " + evt.data);
                 self.optionStack.push(data);
-                this.message=data;
+                self.message=data;
                 self.update();
             })
 
@@ -75,7 +75,7 @@ const eraserWidth=16;
                 self.context.canvas.removeEventListener("mousemove",moveAction);
                 self.optionStack.push(message);
                 self.resultposition=[];
-                this.ws.send(message);
+                self.ws.send(message);
                 //console.log(JSON.stringify(self.optionStack));
             }
             //封装鼠标移动函数
@@ -107,6 +107,7 @@ const eraserWidth=16;
                     break;
                 case 1:
                     op.positions.forEach(position=>{
+                        this.context.beginPath();
                         this.context.lineTo(position.x,position.y);
                         this.context.stroke();
                     })
