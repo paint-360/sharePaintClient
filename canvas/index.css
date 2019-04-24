@@ -1,6 +1,5 @@
 *{padding: 0;margin: 0;}
 html {
-    overflow: hidden;
 }
 a{
     text-decoration: none;
@@ -10,7 +9,7 @@ a{
 #box{
     background-color: #242424;
 }
-.toolMenu{
+/* .toolMenu{
     position: absolute;
     color: white;
 }
@@ -30,4 +29,22 @@ a{
     margin: 5px;
     border:2px solid greenyellow;
     display: none;
+} */
+.tools {
+    min-width: 4em;
+}
+.tool {
+    font-size: 1.5em;
+    width: 2em;
+    height: 2em;
+    line-height: 2em;
+    margin: 0 auto;
+    cursor: pointer;
+}
+.active {
+    border: solid 1px #000;
+    background-color: #cbe6fc;
+}
+body {
+    cursor: crosshair;
 }
