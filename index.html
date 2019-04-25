@@ -9,54 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.8.1/css/all.min.css">
 	<link rel="stylesheet" href="./css/index.css">
 	<style>
-			.box li {
-				list-style: none;
-				float: left;
-				width: 89px;
-				height: 42px;
-				/* text-align: center; */
-				cursor: pointer;
-				font: 400 16px/42px microsoft yahei;
-				line-height: 42px;
-				vertical-align: middle;
-				position: relative;
-			}
-	
-			.box {
-				height: 42px;
-				/* margin: 200px auto; */
-				background: #fff;
-				position: relative;
-				border-radius: 7px;
-			}
-	
-			.box img {
-				width: 30px;
-				height: 30px;
-				vertical-align: middle;
-	
-			}
-	
-			box li a {
-				/* display:table-cell; */
-				/* text-align:center; 2 */
-				margin-top: 0%;
-				position: absolute;
-				width: 40px;
-				margin-left: 5px;
-			}
-	
-			li:hover {
-				border-radius: 7px;
-				background-color: #cbe6fc;
-			}
-	
-			.div {
-				display: inline-block;
-				position: absolute;
-				top: 50%;
-				transform: translateY(-50%)
-			}
+
 	</style>
 
 </head>
@@ -124,7 +77,6 @@
 						</div>
 						<div class="col-12">
                             <div class="tool text-center rectangle" data-name="rect"> <i class="far fa-square"></i></div>
-                            <div class="col-12">
                                 <form>
                                     <div class="form-group">
                                         <label for="color"></label>
@@ -136,11 +88,10 @@
                                     <form class="px-4 py-3">
                                         <div class="form-group">
                                             <label for="line_width_ipt"></label>
-                                            <input type="range" id="line_width_ipt" name="line_width">
+                                            <input type="range" class="custom-range" id="line_width_ipt" name="line_width">
                                         </div>
                                       </form>
                                 </form>
-                                </div>
                             </div>
 						</div>
 					</div>

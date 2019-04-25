@@ -63,11 +63,7 @@ function debounce(fn,delay){
             // this.ws=this.initWebSocket();  
             this.isBegin=-1;//起始点
             //画笔渐变色
-            let linearGradient = this.context.createLinearGradient(0,0,900,600);
-            linearGradient.addColorStop(0,"#1EEB9F");
-            linearGradient.addColorStop(0.5,"#FFFFFF");
-            linearGradient.addColorStop(1,"#26B9EB");
-            this.context.strokeStyle = linearGradient;
+            this.context.strokeStyle = '#000';
             this.initEvent();
             this.drawLine();
         }
@@ -323,9 +319,15 @@ function debounce(fn,delay){
             this.context.strokeStyle = color;
         }
         //封装画布内容转换
-        save(){
-            return this.context.canvas.toDataURL();
-        }
+        save(filename) {
+            const MIME_TYPE = "image/png",
+                tempLink = document.createElement('a');
+            tempLink.href = this.canvasEle.toDataURL(MIME_TYPE);
+            tempLink.download = filename || 'result';
+            document.body.append(tempLink);
+            tempLink.click();
+            document.removeChild(tempLink);
+        };
         //封装橡皮擦
         eraser(){
             this.changeMode(3);
