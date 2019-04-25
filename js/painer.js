@@ -2,7 +2,30 @@
  * Created by Administrator on 2017/8/10.
  * js/painer.js
  */
+let canvasEle = document.getElementById('box');
+            canvasEle.width = 900;
+            canvasEle.height = 600;
 const eraserWidth=16;
+let _EleLeft=getElementLeft(canvasEle),_EleTop=getElementTop(canvasEle);
+console.log(_EleLeft,_EleTop)
+function getElementLeft(element){
+    let actualLeft=element.offsetLeft;
+    let current=element.offsetParent;
+    while(current!==null){
+        actualLeft+=current.offsetLeft;
+        current=current.offsetParent;
+    }
+    return actualLeft;
+}
+function getElementTop(element){
+    let actualTop=element.offsetTop;
+    let current=element.offsetParent;
+    while(current!==null){
+        actualTop+=current.offsetTop;
+        current=current.offsetParent;
+    }
+    return actualTop;
+}
 function throttle(fn,delay,context){
 	let prev=Date.now();
 	return function(){
@@ -14,17 +37,29 @@ function throttle(fn,delay,context){
 		}
 	}
 }
+function debounce(fn,delay){
+	let timer=null;
+	return function(){
+		let context=this;
+		let args=arguments;
+		clearTimeout(timer);
+		timer=setTimeout(()=>{
+			fn.apply(context,args)
+		},delay)
+	}
+}
+
 (function () {
     class Painter{
         constructor(id) {
-            let canvasEle = document.getElementById(id);
-            canvasEle.width = 900;
-            canvasEle.height = 600;
+            
             this.option=1;//记录操作类型 1为画笔 0为橡皮檫
             this.context = canvasEle.getContext("2d");
             this.optionStack=[];//操作记录栈
             this.resultposition=[];
             this.message={};
+            this.roomID;
+            this.ws={};
             // this.ws=this.initWebSocket();  
             this.isBegin=-1;//起始点
             //画笔渐变色
@@ -36,6 +71,7 @@ function throttle(fn,delay,context){
             this.initEvent();
             this.drawLine();
         }
+        
         //事件注册中心
         initEvent(){
             this.startAction=startAction;
@@ -52,7 +88,7 @@ function throttle(fn,delay,context){
                 if(!self.isClear){
                     //开始新的路径
                     self.context.beginPath();
-                    self.context.moveTo(event.pageX,event.pageY);
+                    self.context.moveTo(event.pageX-_EleLeft,event.pageY-_EleTop);
                     self.context.stroke();
                 }
                 //监听鼠标移动
@@ -69,11 +105,13 @@ function throttle(fn,delay,context){
                     lineWidth:self.lineWidth,
                     lineColor:self.context.strokeStyle,
                     isBegin:self.isBegin,
-                    isEnd:1
+                    isEnd:1,
+                    roomID:self.roomID
                 }
-                //不再使用橡皮擦
-                self.isClear=false;
-                self.option=1;
+                console.log(message)
+                // //不再使用橡皮擦
+                // self.isClear=false;
+                // self.option=1;
                 //移除鼠标移动事件
                 self.context.canvas.removeEventListener("mousemove",self.moveAction);
                 self.optionStack.push(message);
@@ -85,18 +123,18 @@ function throttle(fn,delay,context){
             //封装鼠标移动函数
             function moveAction(event) {
                 let item;
-                
+                let width=self.lineWidth;
                 //判断是否启动橡皮擦功能
                 if(self.isClear){
-                    self.context.clearRect(event.pageX-eraserWidth/2,event.pageY-eraserWidth/2,eraserWidth,eraserWidth);
-                    item={x:event.pageX,y:event.pageY};
+                    self.context.clearRect(event.pageX-width/2-_EleLeft,event.pageY-width/2-_EleTop,width,width);
+                    item={x:event.pageX - _EleLeft,y:event.pageY - _EleTop};
                     self.resultposition.push(item);
                     return;
                 }
-                item={x:event.pageX,y:event.pageY};
+                item={x:event.pageX - _EleLeft,y:event.pageY - _EleTop};
                 self.resultposition.push(item);
                 
-                self.context.lineTo(event.pageX,event.pageY);
+                self.context.lineTo(event.pageX - _EleLeft,event.pageY - _EleTop);
                 self.context.stroke();
                 sendMessageT();
             }
@@ -107,7 +145,7 @@ function throttle(fn,delay,context){
                 startX = evt.pageX;
                 startY = evt.pageY;
                 div.id = id;
-                div.className = "div";
+                div.className = "rect";
                 div.style.marginLeft = startX + "px";
                 div.style.marginTop = startY + "px";
                 document.body.appendChild(div);
@@ -122,32 +160,36 @@ function throttle(fn,delay,context){
                 let startX=self.message.x1,startY=self.message.y1;
                 // var scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
                 // var scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
-                rectLeft = (startX - evt.pageX > 0 ? evt.pageX: startX) + "px";
-                rectTop = (startY - evt.pageY> 0 ? evt.pageY: startY) + "px";
-                rectHeight = Math.abs(startY - evt.pageY) + "px";
-                rectWidth = Math.abs(startX - evt.pageX) + "px";
-                document.querySelector('#rect').style.marginLeft = rectLeft;
-                document.querySelector('#rect').style.marginTop = rectTop;
-                document.querySelector('#rect').style.width = rectWidth;
-                document.querySelector('#rect').style.height = rectHeight;
-                
-                
+                rectLeft = (startX - (evt.pageX ) > 0 ? evt.pageX : startX) + "px";
+                rectTop = (startY - (evt.pageY )> 0 ? evt.pageY : startY) + "px";
+                rectHeight = Math.abs(startY - (evt.pageY)) + "px";
+                rectWidth = Math.abs(startX - (evt.pageX)) + "px";
+                if(document.querySelector('#rect')){
+                    document.querySelector('#rect').style.marginLeft = rectLeft;
+                    document.querySelector('#rect').style.marginTop = rectTop;
+                    document.querySelector('#rect').style.width = rectWidth;
+                    document.querySelector('#rect').style.height = rectHeight;
+                }
             }
             function mouseUp(e){
-                console.log('mouseUp')
-                document.querySelector('#rect').remove()
-                let evt = window.event || e;
-                self.message.x2=evt.pageX;
-                self.message.y2=evt.pageY;
-                self.message.lineWidth=self.lineWidth;
-                self.message.lineColor=self.context.strokeStyle;
-                self.ws.send(self.message);
-                //恢复空对象
-                self.message={};
-                self.changeMode(2);
+                if(document.querySelector('#rect')){
+                    document.querySelector('#rect').remove();
+                    let evt = window.event || e;
+                    let x1=self.message.x1 - _EleLeft,y1=self.message.y1 - _EleTop;
+                    self.message.x2=evt.pageX - _EleLeft;
+                    self.message.y2=evt.pageY - _EleTop;
+                    self.message.lineWidth=self.lineWidth;
+                    self.message.lineColor=self.context.strokeStyle;
+                    self.ws.send(self.message);
+                    
+                    self.context.rect(x1,y1,self.message.x2-x1,self.message.y2-y1);
+                    self.context.stroke();
+                    //恢复空对象
+                    self.message={};
+                }
             }
         }
-        initWebPainter(username,roomId){
+        initWebPainter(username,roomID){
             let ws=io.connect("ws://127.0.0.1:3000");
             //let ws = new WebSocket("ws://localhost:3000");
             let self=this;
@@ -169,12 +211,10 @@ function throttle(fn,delay,context){
             //     console.log("Connection closed.");
             // }; 
             this.ws=ws;
-            this.roomId=roomId;
+            this.roomID=roomID;
         }
         drawRect(){
             this.changeMode(1);
-
-            
         }
         sendMessage(){
             if(this.isBegin==-1){
@@ -188,9 +228,10 @@ function throttle(fn,delay,context){
                 lineWidth:this.lineWidth,
                 lineColor:this.context.strokeStyle,
                 isBegin:this.isBegin,
-                isEnd:0
+                isEnd:0,
+                roomID:this.roomID
             }
-            //console.log(this.resultposition)
+            console.log(message)
             this.resultposition=[];
             this.ws.send(message);
         }
@@ -210,9 +251,16 @@ function throttle(fn,delay,context){
                     this.context.canvas.removeEventListener("mousemove",this.mouseMove);
                     document.body.removeEventListener("mouseup",this.mouseUp);
                     break;
+                case 3://橡皮檫模式
+                    this.context.canvas.removeEventListener("mousedown",this.mouseStart);
+                    this.context.canvas.removeEventListener("mousemove",this.mouseMove);
+                    document.body.removeEventListener("mouseup",this.mouseUp);
             }
         }
         drawLine() {
+            this.changeMode(2);
+            this.option=1;
+            this.isClear=false;
             //监听鼠标按下抬起
             this.context.canvas.addEventListener("mousedown",this.startAction);
             this.context.canvas.addEventListener("mouseup",this.endAction);
@@ -220,12 +268,16 @@ function throttle(fn,delay,context){
         
         //更新画布内容
         update(message){
+            console.log(message)
             let op=message.option;
+            let lineWidth=this.lineWidth;
+            let width=message.lineWidth?message.lineWidth:this.lineWidth;
+            this.setLineWidth(width);
             switch(op){
                 //橡皮檫
                 case 0:
                     message.positions.forEach(position=>{
-                        this.context.clearRect(position.x-eraserWidth/2,position.y-eraserWidth/2,eraserWidth,eraserWidth);
+                        this.context.clearRect(position.x-width/2,position.y-width/2,width,width);
                     })
                     break;
                 case 1:
@@ -238,11 +290,17 @@ function throttle(fn,delay,context){
                         this.context.stroke();
                     })
                     break;
+                
+                case 2:
+                    this.context.rect(message.x1,message.y1,message.x2-message.x1,message.y2-message.y1);
+                    this.context.stroke();
+                    break;
                 //清屏
                 case 3:
                     this.context.clearRect(0,0,900,600);
                     break;
             }
+            this.setLineWidth(lineWidth);
         }
         //初始化画布
         initCanvas(data){
@@ -253,6 +311,7 @@ function throttle(fn,delay,context){
         }
         //封装画笔宽度
         setLineWidth(width) {
+            this.lineWidth = width;
             this.context.lineWidth = width;
         }
         //封装设置画笔样式
@@ -269,6 +328,7 @@ function throttle(fn,delay,context){
         }
         //封装橡皮擦
         eraser(){
+            this.changeMode(3);
             this.option=0;
             this.isClear=true;
         }
@@ -280,7 +340,8 @@ function throttle(fn,delay,context){
                 lineWidth:0,
                 lineColor:'',
                 isBegin:1,
-                isEnd:1
+                isEnd:1,
+                roomID:this.roomID
             }
             this.optionStack=[];
             this.context.clearRect(0,0,900,600);
@@ -290,3 +351,7 @@ function throttle(fn,delay,context){
     //Painter定义到window上
     window.Painter = Painter;
 })();
+window.onresize=debounce(function(){
+    _EleLeft=getElementLeft(canvasEle);
+    _EleTop=getElementTop(canvasEle);
+},500)
